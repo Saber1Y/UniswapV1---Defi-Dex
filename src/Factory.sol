@@ -28,4 +28,15 @@ contract Factory {
          emit ExchangeCreated(_tokenAddress, address(exchange));
          return address(exchange);
     }
+
+    function getExchange(address _tokenAddress) public view returns(address) {
+        return tokenToExchange[_tokenAddress];
+    }
+
+    function getToken(address _exchnage) public view returns(address) {
+        return tokenToExchange[_exchnage];
+    }
+    function getTokenId(uint256 _tokenId) public view returns(uint256) {
+        return idToToken[_tokenId];
+    }
 }
