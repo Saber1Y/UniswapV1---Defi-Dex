@@ -5,8 +5,13 @@ import "./ERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract Exchange is ERC20, ReentrancyGuard {
+    
     error InvalidValuesProvided();
     error InsufficientTokenBalance();
+    error InvariantCheckFailed();
+    error InvalidTokenAmount();
+    error TokenAmountLessThanExpected();
+     EthAmountLessThanExpected();
 
     address immutable tokenAddress;
     address immutable factoryAddress;
@@ -48,7 +53,7 @@ contract Exchange is ERC20, ReentrancyGuard {
    function removeLiquidity(uint256 tokenAmount) external nonReentrant returns (uint, uint) {
     // Check if the provided tokenAmount is valid (greater than 0)
     if (tokenAmount <= 0) {
-        revert("Invalid token amount");
+        revert InvalidTokenAmount();
     }
 
     // Calculate the equivalent ETH amount to be returned based on the ratio of tokenAmount to totalSupply
@@ -59,7 +64,7 @@ contract Exchange is ERC20, ReentrancyGuard {
 
     // Invariant check to ensure that the pool's token-to-ETH ratio remains the same before and after liquidity is removed
     if ((getTokenReserves() / address(this).balance) != ((getTokenReserves() + tokenAmt) / (address(this).balance + ethAmount))) {
-        revert("Invariant check failed");
+        revert InvariantCheckFailed();
     }
 
     // Burn the liquidity tokens that the user is removing from the pool
@@ -75,6 +80,32 @@ contract Exchange is ERC20, ReentrancyGuard {
     emit LiquidityRemoved(msg.sender, ethAmount, tokenAmt);
 
     return (ethAmount, tokenAmt);
+}
+
+function swapEthForTokens(uint minTokens, address recipient) external payable nonReentrant returns (uint) {
+    uint tokenAmount = getTokenAmount(msg.value);
+    if (tokenAmount <= minTokens) {
+        revert TokenAmountLessThanExpected();
+    }
+
+    IERC20(tokenAddress).transfer(recipient, tokenAmount);
+    emit TokenPurchased(msg.sender, msg.value, tokenAmount);
+
+    return tokenAmount;
+}
+
+function tokenForEthSwap(uint tokensSold, uint minEth) external nonReentrant returns(uint) {
+    uint ethAmount = getEthAmount(tokensSold);
+
+    if(ethAmount < minEth) {
+        revert EthAmountLessThanExpected();
+    }
+
+    IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokensSold);
+    payable(msg.sender).transfer(ethAmount);
+    emit TokenSold(msg.sender, tokensSold, ethAmount);
+
+    return ethAmount;
 }
 
 }
