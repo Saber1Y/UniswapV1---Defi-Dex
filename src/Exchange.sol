@@ -5,13 +5,17 @@ import "./ERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract Exchange is ERC20, ReentrancyGuard {
-    
+
     error InvalidValuesProvided();
     error InsufficientTokenBalance();
     error InvariantCheckFailed();
     error InvalidTokenAmount();
     error TokenAmountLessThanExpected();
-     EthAmountLessThanExpected();
+    error EthAmountLessThanExpected();
+    error EthMustBeGreaterThan0();
+    error TokenSoldMustBeGreaterThan0();
+    error InvalidValuesProvided();
+
 
     address immutable tokenAddress;
     address immutable factoryAddress;
@@ -106,6 +110,43 @@ function tokenForEthSwap(uint tokensSold, uint minEth) external nonReentrant ret
     emit TokenSold(msg.sender, tokensSold, ethAmount);
 
     return ethAmount;
+}
+
+
+// Pricing Functions
+//Determines the number of tokens a user would receive for a specified amount of ETH. It first checks that the amount of ETH being sold is greater than 0.
+function getTokenAmount(uint ethSold) public view returns (uint256) {
+
+    if (ethSold < 0) {
+        revert EthMustBeGreaterThan0();
+    }
+    uint outputReserve = getTokenReserves();
+    return getAmount(ethSold, address(this).balance - ethSold, outputReserve);
+}
+//Determines the amount of ETH a user would receive for a specified number of tokens. It first checks that the number of tokens being sold is greater than 0. 
+function getEthAmount(uint tokensSold) public view returns (uint256) { 
+
+    if (tokenSOld <= 0) {
+        revert TokenSoldMustBeGreaterThan0();
+    }
+    uint inputReserve = getTokenReserves();
+    return getAmount(tokensSold, inputReserve - tokensSold, address(this).balance);
+}
+
+function getAmount(uint inputAmount, uint inputReserve, uint outputReserve) public pure returns (uint256) {
+
+
+    if (inputReserve < 0 || inputAmount < 0 ) {
+        revert InvalidValuesProvided();
+    }
+    uint256 inputAmountWithFee = inputAmount * 997;
+    uint256 numerator = inputAmountWithFee * outputReserve;
+    uint256 denominator = (inputReserve * 1000) + inputAmountWithFee;
+    return numerator / denominator;
+}
+
+function getTokenReserves() public view returns (uint256) {
+    return IERC20(tokenAddress).balanceOf(address(this));
 }
 
 }
