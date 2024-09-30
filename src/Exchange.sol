@@ -14,7 +14,6 @@ contract Exchange is ERC20, ReentrancyGuard {
     error EthAmountLessThanExpected();
     error EthMustBeGreaterThan0();
     error TokenSoldMustBeGreaterThan0();
-    error InvalidValuesProvided();
 
 
     address immutable tokenAddress;
@@ -25,7 +24,14 @@ contract Exchange is ERC20, ReentrancyGuard {
     event TokenPurchased(address indexed buyer, uint256 ethAmount, uint256 tokensReceived);
     event TokenSold(address indexed seller, uint256 tokensSold, uint256 ethReceived);
 
-    function addLiquidity(uint256 tokenAdded) external paybable nonReentrant returns (uint256) {
+      constructor(address _tokenAddress, address _factoryAddress, string memory name, string memory symbol) 
+        ERC20(name, symbol) 
+    {
+        tokenAddress = _tokenAddress;
+        factoryAddress = _factoryAddress;
+    }
+
+    function addLiquidity(uint256 tokenAdded) external payable nonReentrant returns (uint256) {
         if (msg.value < 0 || tokenAdded < 0) {
             revert InvalidValuesProvided();
         }
@@ -34,22 +40,22 @@ contract Exchange is ERC20, ReentrancyGuard {
         uint256 tokenBalance = getTokenReserves();
 
         if (tokenBalance == 0) {
-            if (IERC20(tokenAddress).balanceOf(msg.sender) < tokensAdded) {
+            if (IERC20(tokenAddress).balanceOf(msg.sender) < tokenAdded) {
                 revert InsufficientTokenBalance();
             }
-            IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokensAdded);
+            IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokenAdded);
             uint256 liquidity = ethBalance;
             _mint(msg.sender, liquidity);
-            emit LiquidityAdded(msg.sender, msg.value, tokensAdded);
+            emit LiquidityAdded(msg.sender, msg.value, tokenAdded);
             return liquidity;
         } else {
             uint256 liquidity = (msg.value * totalSupply()) / (ethBalance - msg.value);
-            if (IERC20(tokenAddress).balanceOf(msg.sender) < tokensAdded) {
-                revert("Insufficient token balance");
+            if (IERC20(tokenAddress).balanceOf(msg.sender) < tokenAdded) {
+                revert InsufficientTokenBalance();
             }
-            IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokensAdded);
+            IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokenAdded);
             _mint(msg.sender, liquidity);
-            emit LiquidityAdded(msg.sender, msg.value, tokensAdded);
+            emit LiquidityAdded(msg.sender, msg.value, tokenAdded);
             return liquidity;
         }
     }
@@ -126,7 +132,7 @@ function getTokenAmount(uint ethSold) public view returns (uint256) {
 //Determines the amount of ETH a user would receive for a specified number of tokens. It first checks that the number of tokens being sold is greater than 0. 
 function getEthAmount(uint tokensSold) public view returns (uint256) { 
 
-    if (tokenSOld <= 0) {
+    if (tokensSold <= 0) {
         revert TokenSoldMustBeGreaterThan0();
     }
     uint inputReserve = getTokenReserves();
