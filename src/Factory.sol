@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
-import { Exchange } from "./Exchange.sol";
+pragma solidity ^0.8.20;
+
+import {Exchange} from "./Exchange.sol";
 
 contract Factory {
     error NotTokenAddress();
@@ -21,9 +22,8 @@ contract Factory {
         if (tokenToExchange[_tokenAddress] != address(0)) {
             revert ExchangeAlreadyExists();
         }
-
         Exchange exchange = new Exchange(_tokenAddress, address(this), "MyToken", "MTK");
- //created new instance of contract Exchnage to pass argument
+        //created new instance of contract Exchnage to pass argument
         exchangeArray.push(exchange); //adding the new contract to the exchnage array
         tokenToExchange[_tokenAddress] = address(exchange);
 
