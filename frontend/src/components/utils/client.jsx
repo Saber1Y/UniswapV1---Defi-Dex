@@ -1,56 +1,38 @@
-import { createConfig, configureChains, WagmiConfig } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
-import { InjectedConnector } from "wagmi/connectors/injected";
-import { publicProvider } from "wagmi/providers/public";
 import {
-  getDefaultWallets,
-  RainbowKitProvider,
-  ConnectButton,
-} from "@rainbow-me/rainbowkit";
+  createWalletClient,
+  createPublicClient,
+  http,
+  custom,
+  Address,
+} from "viem";
+import { sepolia } from "viem/chains";
+import "viem/window";
 
-// Step 1: Configure Chains and Providers
-const { chains, publicClient } = configureChains(
-  [mainnet, sepolia], 
-  [publicProvider()]
-);
+// Create an HTTP transport using the hardcoded Alchemy Sepolia endpoint URL
+const transport = http("https://eth-sepolia.g.alchemy.com/v2/4bWOvk391ctwaMr74INX5GLLrctoqY8h");
 
-// Step 2: Set up default wallets (RainbowKit provides various wallet connectors)
-const { connectors } = getDefaultWallets({
-  appName: "UniswapV1", 
-  chains,
+// Create a public client for the Sepolia chain
+export const publicClient = createPublicClient({
+  chain: sepolia,
+  transport,
 });
 
-// Step 3: Wagmi Client Configuration
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
+// Create a wallet client using the Sepolia chain and the browser's Ethereum provider (MetaMask, etc.)
+export const walletClient = createWalletClient({
+  chain: sepolia,
+  transport: custom(window.ethereum), // You may want to handle null cases if no wallet is found
 });
 
+// Retrieve the user's account address using the wallet client
+let account;
 
-export function App() {
-  return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
-        <Wallet /> {/* This is your wallet component */}
-      </RainbowKitProvider>
-    </WagmiConfig>
-  );
-}
+(async () => {
+  try {
+    [account] = await walletClient.getAddresses();
+    console.log("User's account address:", account); // Log the retrieved account address
+  } catch (error) {
+    console.error("Failed to get account address:", error);
+  }
+})();
 
-// Step 5: Use RainbowKit's ConnectButton
-export function Wallet() {
-  const { address, isConnected } = useAccount(); // Get user's account
-
-  return (
-    <div>
-      {isConnected ? (
-        <div>
-          <p>Connected as {address}</p>
-        </div>
-      ) : (
-        <ConnectButton />
-      )}
-    </div>
-  );
-}
+export { account };
