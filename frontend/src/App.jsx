@@ -7,9 +7,10 @@ import "@rainbow-me/rainbowkit/styles.css";
 import AddLiquidity from "./AddLiquidity";
 import Navbar from "./constants/NavBar";
 import factoryContract from "./Data/Factory.json";
+import CreateExchange from "./CreateExchange";
 
 const abi = factoryContract.abi;
-const contractAddress = "0x90193C961A926261B756D1E5bb255e67ff9498A1";
+const factoryAddress = "0x90193C961A926261B756D1E5bb255e67ff9498A1";
 
 function App() {
   const queryClient = new QueryClient();
@@ -18,7 +19,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider chains={config.chains}>
           <Navbar />
-          {/* <AddLiquidity /> */}
+          <CreateExchange abi={abi} factoryAddress={factoryAddress} />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
