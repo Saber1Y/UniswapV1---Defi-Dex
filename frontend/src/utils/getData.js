@@ -1,20 +1,18 @@
 import { createPublicClient, http } from "viem";
 import MyTokenContract from "../Data/MyToken.json"
+import ExchangeContract from "../Data/Exchnage.json"
+import factoryContract  from "../Data/Factory.json"
 
 // Define your contract ABIs and addresses directly
 const TOKEN_CONTRACT_ABI = MyTokenContract.abi;
 
 const TOKEN_CONTRACT_ADDRESS = "0x5E5785C04cC3Bc245130eCB351AaEBbB94138df1"; // Replace with your actual token contract address
 
-const EXCHANGE_CONTRACT_ABI = [
-    // Replace with your actual exchange contract ABI
-];
+const EXCHANGE_CONTRACT_ABI = ExchangeContract.abi;
 
-const FACTORY_CONTRACT_ADDRESS = "0xYourFactoryContractAddress"; // Replace with your actual factory contract address
+const FACTORY_CONTRACT_ADDRESS = "0x90193C961A926261B756D1E5bb255e67ff9498A1"; // Replace with your actual factory contract address
 
-const FACTORY_CONTRACT_ABI = [
-    // Replace with your actual factory contract ABI
-];
+const FACTORY_CONTRACT_ABI = factoryContract.abi;
 
 // Create a public client instance
 const publicClient = createPublicClient({
